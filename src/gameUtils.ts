@@ -291,8 +291,11 @@ function generateIncorrectValues(rule: GameRule, targetNumber: number): (number 
 function getAlternativeTarget(rule: GameRule): number {
   switch (rule) {
     case 'multiples':
+      return randInt(3, 8); // Use smaller numbers for multiples
     case 'factors':
-      return randInt(6, 12); // Use larger numbers for more factors/multiples
+      // Use numbers with many factors to make the game more interesting
+      const goodFactorNumbers = [12, 18, 20, 24, 30, 36];
+      return goodFactorNumbers[randInt(0, goodFactorNumbers.length - 1)];
     case 'primes':
       return 0; // Primes don't use a target number
     case 'addition':

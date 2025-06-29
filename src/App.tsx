@@ -18,7 +18,9 @@ function getInitialState(score = 0, puzzlesSolved = 0): GameStateWithGuesses & {
   } else if (rule === 'subtraction') {
     targetNumber = randInt(0, 15);
   } else if (rule === 'factors') {
-    targetNumber = randInt(10, 40);
+    // Generate numbers that have more factors to make the game more interesting
+    const numbersWithManyFactors = [12, 18, 20, 24, 30, 36];
+    targetNumber = numbersWithManyFactors[randInt(0, numbersWithManyFactors.length - 1)];
   } else {
     targetNumber = randInt(2, 12);
   }
@@ -476,10 +478,24 @@ function GameGrid({ grid }: { grid: GameState['grid'] }) {
     <div className="grid">
       {grid.flat().map((cell, idx) => (
         <div
-          className={`cell${cell.hasMuncher ? ' muncher' : ''}${cell.hasTroggle ? ' troggle' : ''}${cell.isTarget && cell.revealed ? ' target' : ''}${cell.munchedCorrect ? ' munched' : ''}`}
+          className={`cell${cell.hasMuncher ? ' muncher' : ''}${cell.hasTroggle ? ' troggle' : ''}${cell.isTarget && cell.revealed ? ' target' : ''}${cell.munchedCorrect ? ' munched' : ''}${cell.hasMuncher && cell.hasTroggle ? ' collision' : ''}`}
           key={idx}
         >
-          {cell.hasMuncher ? (
+          {cell.hasMuncher && cell.hasTroggle ? (
+            // Show collision - both characters overlapping
+            <div className="collision-container">
+              <img
+                src="/assets/muncher.jpg"
+                alt="Muncher"
+                className="collision-muncher"
+              />
+              <img
+                src="/assets/troggle.jpg"
+                alt="Troggle"
+                className="collision-troggle"
+              />
+            </div>
+          ) : cell.hasMuncher ? (
             <img
               src="/assets/muncher.jpg"
               alt="Muncher"
@@ -507,15 +523,19 @@ function moveMuncherWithSound(state: GameStateWithGuesses, dRow: number, dCol: n
   const newRow = Math.max(0, Math.min(state.grid.length - 1, row + dRow));
   const newCol = Math.max(0, Math.min(state.grid[0].length - 1, col + dCol));
   if (newRow === row && newCol === col) return { hitTroggle: false, nextState: state };
-  const cell = state.grid[newRow][newCol];
-  if (cell.hasTroggle) {
-    // Game over
-    return { hitTroggle: true, nextState: { ...state, gameOver: true } };
-  }
-  // Move muncher only (no eating)
+  
+  // Move muncher first (allow collision to happen visually)
   let grid = state.grid.map(row => row.map(cell => ({ ...cell })));
   grid[state.muncher.row][state.muncher.col].hasMuncher = false;
   grid[newRow][newCol].hasMuncher = true;
+  
+  // Check for collision AFTER the move
+  const cell = grid[newRow][newCol];
+  if (cell.hasTroggle) {
+    // Collision happened - game over after showing the collision
+    return { hitTroggle: true, nextState: { ...state, grid, muncher: { row: newRow, col: newCol }, gameOver: true } };
+  }
+  
   return {
     hitTroggle: false,
     nextState: {
@@ -530,10 +550,13 @@ function muncherEatWithSound(state: GameStateWithGuesses & { gameWon?: boolean }
   if (state.gameOver || state.gameWon) return { didMunch: false, correct: false, hitTroggle: false, nextState: state };
   const { row, col } = state.muncher;
   const cell = state.grid[row][col];
+  
+  // Check for collision with Troggle (this can happen if they're on the same square)
   if (cell.hasTroggle) {
-    // Game over
+    // Game over - collision during eating
     return { didMunch: false, correct: false, hitTroggle: true, nextState: { ...state, gameOver: true, gameWon: false } };
   }
+  
   let score = state.score;
   let grid = state.grid.map(row => row.map(cell => ({ ...cell })));
   
@@ -616,6 +639,7 @@ function moveTroggles(state: GameStateWithGuesses & { gameWon?: boolean }): Game
   if (state.gameOver || state.gameWon) return state;
   let grid = state.grid.map(row => row.map(cell => ({ ...cell })));
   const newTroggles: Position[] = [];
+  
   for (const troggle of state.troggles) {
     const { row, col } = troggle;
     grid[row][col].hasTroggle = false;
@@ -629,13 +653,20 @@ function moveTroggles(state: GameStateWithGuesses & { gameWon?: boolean }): Game
     }
     const newRow = Math.max(0, Math.min(ROWS - 1, row + dRow));
     const newCol = Math.max(0, Math.min(COLS - 1, col + dCol));
-    // Check if Troggle moves onto the Muncher
-    if (newRow === state.muncher.row && newCol === state.muncher.col) {
-      return { ...state, gameOver: true, gameWon: false };
-    }
+    
+    // Move the Troggle first (allow collision to happen visually)
     grid[newRow][newCol].hasTroggle = true;
     newTroggles.push({ row: newRow, col: newCol });
   }
+  
+  // Check for collision AFTER all Troggles have moved
+  for (const troggle of newTroggles) {
+    if (troggle.row === state.muncher.row && troggle.col === state.muncher.col) {
+      // Collision happened - game over after showing the collision
+      return { ...state, grid, troggles: newTroggles, gameOver: true, gameWon: false };
+    }
+  }
+  
   return { ...state, grid, troggles: newTroggles };
 }
 

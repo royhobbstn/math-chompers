@@ -102,7 +102,7 @@
   box-sizing: border-box;
   aspect-ratio: 1 / 1;
   position: relative;
-  overflow: hidden;
+  /* Remove overflow: hidden to allow glows to show */
 }
 
 .cell.target {
@@ -116,16 +116,18 @@
   display: flex;
   align-items: stretch;
   justify-content: stretch;
+  position: relative;
+  z-index: 10; /* Ensure character cells appear above grid lines */
 }
 
 .cell.muncher {
-  /* Optional: add a glow or border for the muncher */
-  box-shadow: 0 0 8px 2px #6f6;
+  /* Green glow for the muncher */
+  box-shadow: 0 0 12px 4px #6f6;
 }
 
 .cell.troggle {
-  /* Optional: add a glow or border for the troggle */
-  box-shadow: 0 0 8px 2px #f66;
+  /* Red glow for the troggle */
+  box-shadow: 0 0 12px 4px #f66;
 }
 
 .cell .sprite, .cell > div[role="img"], .cell img {
@@ -327,6 +329,67 @@
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.8);
   }
+}
+
+.cell.collision {
+  /* Special styling for collision */
+  box-shadow: 0 0 16px 6px #ff0000;
+  animation: collisionPulse 0.5s ease-in-out;
+  z-index: 20; /* Highest z-index for collision */
+}
+
+.collision-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.collision-muncher {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+
+.collision-troggle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 2;
+  /* Create striped transparency mask to show both sprites */
+  mask: repeating-linear-gradient(
+    45deg,
+    transparent 0px,
+    transparent 4px,
+    black 4px,
+    black 8px
+  );
+  -webkit-mask: repeating-linear-gradient(
+    45deg,
+    transparent 0px,
+    transparent 4px,
+    black 4px,
+    black 8px
+  );
+  animation: collisionShake 0.3s ease-in-out infinite;
+}
+
+@keyframes collisionPulse {
+  0% { box-shadow: 0 0 12px 4px #ff0000; }
+  50% { box-shadow: 0 0 20px 8px #ff4444; }
+  100% { box-shadow: 0 0 12px 4px #ff0000; }
+}
+
+@keyframes collisionShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
 }
 
 @media (max-width: 600px) {
