@@ -1,6 +1,6 @@
-# Number Munchers (React + TypeScript)
+# Math Chompers (React + TypeScript)
 
-This project is a child-friendly math game inspired by the classic Number Munchers. It is built with React, TypeScript, and Vite.
+This project is a child-friendly math game inspired by classic educational math games. It is built with React, TypeScript, and Vite.
 
 ## Features
 
