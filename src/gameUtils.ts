@@ -192,6 +192,25 @@ function generateCorrectValues(rule: GameRule, targetNumber: number): (number | 
         }
       }
       break;
+      
+    case 'mixed':
+      // Generate both addition and subtraction problems that equal targetNumber
+      // Addition problems
+      for (let a = 0; a <= targetNumber; a++) {
+        const b = targetNumber - a;
+        if (b >= 0 && b <= 20) {
+          values.push(`${a}+${b}`);
+          if (a !== b) values.push(`${b}+${a}`);
+        }
+      }
+      // Subtraction problems
+      for (let b = 0; b <= 20; b++) {
+        const a = b + targetNumber;
+        if (a >= b && a <= 30) {
+          values.push(`${a}-${b}`);
+        }
+      }
+      break;
   }
   
   return values;
@@ -220,6 +239,17 @@ function generateIncorrectValues(rule: GameRule, targetNumber: number): (number 
         if (typeof value === 'string' && value.includes('-')) {
           const [a, b] = value.split('-').map(Number);
           return a - b === targetNumber;
+        }
+        return false;
+      case 'mixed':
+        if (typeof value === 'string') {
+          if (value.includes('+')) {
+            const [a, b] = value.split('+').map(Number);
+            return a + b === targetNumber;
+          } else if (value.includes('-')) {
+            const [a, b] = value.split('-').map(Number);
+            return a - b === targetNumber;
+          }
         }
         return false;
       default:
@@ -251,6 +281,21 @@ function generateIncorrectValues(rule: GameRule, targetNumber: number): (number 
         const x = randInt(0, 30);
         const y = randInt(0, Math.min(x, 15));
         value = `${x}-${y}`;
+        break;
+        
+      case 'mixed':
+        // Generate both addition and subtraction problems for mixed mode
+        if (randInt(0, 1) === 0) {
+          // Addition problem
+          const a = randInt(0, 20);
+          const b = randInt(0, 20);
+          value = `${a}+${b}`;
+        } else {
+          // Subtraction problem
+          const x = randInt(0, 30);
+          const y = randInt(0, Math.min(x, 15));
+          value = `${x}-${y}`;
+        }
         break;
         
       default:
@@ -302,6 +347,8 @@ function getAlternativeTarget(rule: GameRule): number {
       return randInt(8, 15); // Sweet spot for addition problems
     case 'subtraction':
       return randInt(3, 10); // Good range for subtraction
+    case 'mixed':
+      return randInt(5, 12); // Good range for mixed addition/subtraction problems
     default:
       return randInt(2, 12);
   }

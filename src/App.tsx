@@ -8,7 +8,7 @@ const ROWS = 5;
 const COLS = 6;
 
 function getInitialState(score = 0, puzzlesSolved = 0): GameStateWithGuesses & { gameWon?: boolean, timeLeft?: number, puzzlesSolved?: number } {
-  const RULES: GameRule[] = ['multiples', 'factors', 'primes', 'addition', 'subtraction'];
+  const RULES: GameRule[] = ['multiples', 'factors', 'primes', 'addition', 'subtraction', 'mixed'];
   const rule = RULES[randInt(0, RULES.length - 1)];
   let targetNumber: number;
   if (rule === 'primes') {
@@ -17,6 +17,8 @@ function getInitialState(score = 0, puzzlesSolved = 0): GameStateWithGuesses & {
     targetNumber = randInt(5, 20);
   } else if (rule === 'subtraction') {
     targetNumber = randInt(0, 15);
+  } else if (rule === 'mixed') {
+    targetNumber = randInt(5, 15); // Good range for mixed addition/subtraction
   } else if (rule === 'factors') {
     // Generate numbers that have more factors to make the game more interesting
     const numbersWithManyFactors = [12, 18, 20, 24, 30, 36];
@@ -290,6 +292,17 @@ function App() {
                       isActuallyCorrect = a - b === prev.targetNumber;
                     }
                     break;
+                  case 'mixed':
+                    if (typeof cell.value === 'string') {
+                      if (cell.value.includes('+')) {
+                        const [a, b] = cell.value.split('+').map(Number);
+                        isActuallyCorrect = a + b === prev.targetNumber;
+                      } else if (cell.value.includes('-')) {
+                        const [a, b] = cell.value.split('-').map(Number);
+                        isActuallyCorrect = a - b === prev.targetNumber;
+                      }
+                    }
+                    break;
                 }
                 
                 if (isActuallyCorrect) {
@@ -457,6 +470,7 @@ function GameInfo({ rule, targetNumber, score, incorrectGuesses, timeLeft, grid 
   if (rule === 'primes') ruleText = 'Eat all prime numbers';
   if (rule === 'addition') ruleText = `Find all sums that add up to ${targetNumber}`;
   if (rule === 'subtraction') ruleText = `Find all differences that equal ${targetNumber}`;
+  if (rule === 'mixed') ruleText = `Find all addition and subtraction problems that equal ${targetNumber}`;
   // Count total correct answers: current targets + munched correct answers
   const totalCorrectAnswers = grid.flat().filter(cell => 
     cell.isTarget || cell.munchedCorrect
@@ -583,6 +597,17 @@ function muncherEatWithSound(state: GameStateWithGuesses & { gameWon?: boolean }
         if (typeof cell.value === 'string' && cell.value.includes('-')) {
           const [a, b] = cell.value.split('-').map(Number);
           isActuallyCorrect = a - b === state.targetNumber;
+        }
+        break;
+      case 'mixed':
+        if (typeof cell.value === 'string') {
+          if (cell.value.includes('+')) {
+            const [a, b] = cell.value.split('+').map(Number);
+            isActuallyCorrect = a + b === state.targetNumber;
+          } else if (cell.value.includes('-')) {
+            const [a, b] = cell.value.split('-').map(Number);
+            isActuallyCorrect = a - b === state.targetNumber;
+          }
         }
         break;
     }

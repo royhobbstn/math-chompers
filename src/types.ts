@@ -14,7 +14,7 @@ export type Position = {
   col: number;
 };
 
-export type GameRule = 'multiples' | 'factors' | 'primes' | 'addition' | 'subtraction';
+export type GameRule = 'multiples' | 'factors' | 'primes' | 'addition' | 'subtraction' | 'mixed';
 
 export interface GameState {
   grid: Cell[][];
