@@ -122,6 +122,17 @@ export function generateGrid(
             shouldBeTarget = a - b === targetNumber;
           }
           break;
+        case 'mixed':
+          if (typeof cell.value === 'string') {
+            if (cell.value.includes('+')) {
+              const [a, b] = cell.value.split('+').map(Number);
+              shouldBeTarget = a + b === targetNumber;
+            } else if (cell.value.includes('-')) {
+              const [a, b] = cell.value.split('-').map(Number);
+              shouldBeTarget = a - b === targetNumber;
+            }
+          }
+          break;
       }
       
       if (cell.isTarget !== shouldBeTarget) {
